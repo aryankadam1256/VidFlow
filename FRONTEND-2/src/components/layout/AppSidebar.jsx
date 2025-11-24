@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, TrendingUp, Library, Video } from 'lucide-react';
+import { Home, TrendingUp, Library, Video, LayoutDashboard, UploadCloud } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const AppSidebar = () => {
@@ -11,6 +11,8 @@ const AppSidebar = () => {
         { path: '/', name: 'Home', icon: Home },
         { path: '/trending', name: 'Trending', icon: TrendingUp },
         { path: '/library', name: 'Library', icon: Library, authRequired: true },
+        { path: '/dashboard', name: 'Dashboard', icon: LayoutDashboard, authRequired: true },
+        { path: '/upload', name: 'Upload', icon: UploadCloud, authRequired: true },
     ];
 
     const isActive = (path) => {

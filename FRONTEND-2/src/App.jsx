@@ -5,6 +5,7 @@ import AppLayout from './components/layout/AppLayout';
 import Home from './pages/Home';
 import VideoDetail from './pages/VideoDetail';
 import Upload from './pages/Upload';
+import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
@@ -70,6 +71,14 @@ function App() {
             <ProtectedRoute>
               <AppLayout>
                 <Upload />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Dashboard />
               </AppLayout>
             </ProtectedRoute>
           } />

@@ -8,7 +8,7 @@ const Search = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const query = searchParams.get('q') || '';
-  
+
   const [videos, setVideos] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -32,16 +32,16 @@ const Search = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const response = await searchAPI.searchVideos(searchQuery, {
         page: pageNum,
         limit: 20,
         sortBy: sort
       });
-      
+
       const data = response.data.data || [];
       const meta = response.data.meta || {};
-      
+
       setVideos(data);
       setPage(meta.page || pageNum);
       setTotalPages(meta.totalPages || 1);
@@ -89,7 +89,7 @@ const Search = () => {
         <h1 className="page-title">
           Search Results for "{query}"
         </h1>
-        
+
         {totalVideos > 0 && (
           <p style={{ color: '#606060', marginTop: '8px' }}>
             {totalVideos} {totalVideos === 1 ? 'result' : 'results'} found
@@ -97,9 +97,9 @@ const Search = () => {
         )}
 
         {/* Sort Options */}
-        <div style={{ 
-          display: 'flex', 
-          gap: '12px', 
+        <div style={{
+          display: 'flex',
+          gap: '12px',
           marginTop: '16px',
           alignItems: 'center'
         }}>
@@ -160,18 +160,19 @@ const Search = () => {
         </div>
       ) : (
         <>
-          <div className="video-grid">
+          {/* YouTube-style horizontal list */}
+          <div className="flex flex-col gap-4">
             {videos.map((video) => (
-              <VideoCard key={video._id} video={video} />
+              <VideoCard key={video._id} video={video} variant="horizontal" />
             ))}
           </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              gap: '8px', 
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '8px',
               marginTop: '32px',
               alignItems: 'center'
             }}>
@@ -183,11 +184,11 @@ const Search = () => {
               >
                 Previous
               </button>
-              
+
               <span style={{ color: '#606060' }}>
                 Page {page} of {totalPages}
               </span>
-              
+
               <button
                 onClick={() => handlePageChange(page + 1)}
                 disabled={page >= totalPages}

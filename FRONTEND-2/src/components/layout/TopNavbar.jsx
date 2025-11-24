@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Upload, Bell, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import VidFlowLogo from '../VidFlowLogo';
 
 const TopNavbar = ({ onAuthModalOpen }) => {
     const { user, isAuthenticated } = useAuth();
@@ -19,10 +20,8 @@ const TopNavbar = ({ onAuthModalOpen }) => {
         <nav className="sticky top-0 z-50 h-14 bg-white border-b border-slate-200">
             <div className="flex h-full items-center justify-between px-4 lg:px-6">
                 {/* Left: Logo */}
-                <Link to="/" className="flex items-center gap-2 flex-shrink-0">
-                    <span className="bg-gradient-to-r from-brand-blue to-brand-cyan bg-clip-text text-transparent font-bold text-xl tracking-tight">
-                        VidFlow
-                    </span>
+                <Link to="/" className="flex items-center gap-2 flex-shrink-0 hover:opacity-90 transition-opacity">
+                    <VidFlowLogo />
                 </Link>
 
                 {/* Center: Search Bar */}
