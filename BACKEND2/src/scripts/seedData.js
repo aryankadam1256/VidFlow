@@ -12,19 +12,19 @@ dotenv.config({ path: "./.env" });
 const seedData = async () => {
   try {
     // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI.includes(DB_NAME) 
-      ? process.env.MONGODB_URI 
+    const mongoUri = process.env.MONGODB_URI.includes(DB_NAME)
+      ? process.env.MONGODB_URI
       : `${process.env.MONGODB_URI}/${DB_NAME}`;
     await mongoose.connect(mongoUri);
     console.log("✅ Connected to MongoDB");
 
     // Create sample users
     const hashedPassword = await bcrypt.hash("password123", 10);
-    
+
     // Check if users already exist
     const existingUsers = await User.find({ username: { $in: ["demo_user1", "demo_user2", "demo_user3"] } });
     let users;
-    
+
     if (existingUsers.length >= 3) {
       console.log("⚠️  Demo users already exist. Using existing users.");
       users = existingUsers.slice(0, 3);
@@ -72,7 +72,7 @@ const seedData = async () => {
       {
         title: "Getting Started with React",
         description: "Learn the fundamentals of React including components, props, and state management. This comprehensive tutorial covers everything you need to know to start building React applications.",
-        thumbnail: "https://via.placeholder.com/1280x720/FF6B6B/FFFFFF?text=React+Tutorial",
+        thumbnail: "https://picsum.photos/seed/react/1280/720",
         duration: 600,
         views: 1500,
         ownerIndex: 0,
@@ -83,7 +83,7 @@ const seedData = async () => {
       {
         title: "Node.js Backend Development",
         description: "Complete guide to building RESTful APIs with Node.js and Express. Learn about routing, middleware, database integration, and authentication. Perfect for beginners and intermediate developers.",
-        thumbnail: "https://via.placeholder.com/1280x720/4ECDC4/FFFFFF?text=Node.js+Tutorial",
+        thumbnail: "https://picsum.photos/seed/node/1280/720",
         duration: 1200,
         views: 2500,
         ownerIndex: 1,
@@ -94,7 +94,7 @@ const seedData = async () => {
       {
         title: "MongoDB Database Tutorial",
         description: "Master MongoDB from basics to advanced queries. Learn about schemas, aggregation pipelines, indexing, and best practices for database design. Includes real-world examples.",
-        thumbnail: "https://via.placeholder.com/1280x720/95E1D3/FFFFFF?text=MongoDB+Tutorial",
+        thumbnail: "https://picsum.photos/seed/mongo/1280/720",
         duration: 900,
         views: 3200,
         ownerIndex: 0,
@@ -105,7 +105,7 @@ const seedData = async () => {
       {
         title: "JavaScript ES6+ Features",
         description: "Explore modern JavaScript features including arrow functions, destructuring, async/await, promises, and modules. Essential knowledge for modern web development.",
-        thumbnail: "https://via.placeholder.com/1280x720/F38181/FFFFFF?text=JavaScript+Tutorial",
+        thumbnail: "https://picsum.photos/seed/js/1280/720",
         duration: 750,
         views: 1800,
         ownerIndex: 1,
@@ -116,7 +116,7 @@ const seedData = async () => {
       {
         title: "CSS Grid and Flexbox Guide",
         description: "Learn modern CSS layout techniques with Grid and Flexbox. Build responsive designs and master the art of CSS layout systems. Includes practical examples.",
-        thumbnail: "https://via.placeholder.com/1280x720/AA96DA/FFFFFF?text=CSS+Tutorial",
+        thumbnail: "https://picsum.photos/seed/css/1280/720",
         duration: 480,
         views: 2100,
         ownerIndex: 2,
@@ -127,7 +127,7 @@ const seedData = async () => {
       {
         title: "Python Programming Basics",
         description: "Introduction to Python programming language. Learn syntax, data structures, functions, and object-oriented programming. Perfect starting point for beginners.",
-        thumbnail: "https://via.placeholder.com/1280x720/FFA07A/FFFFFF?text=Python+Tutorial",
+        thumbnail: "https://picsum.photos/seed/python/1280/720",
         duration: 1800,
         views: 4500,
         ownerIndex: 0,
@@ -138,7 +138,7 @@ const seedData = async () => {
       {
         title: "Docker Containerization Guide",
         description: "Learn how to containerize your applications with Docker. Understand images, containers, volumes, and Docker Compose. Deploy applications efficiently.",
-        thumbnail: "https://via.placeholder.com/1280x720/20B2AA/FFFFFF?text=Docker+Tutorial",
+        thumbnail: "https://picsum.photos/seed/docker/1280/720",
         duration: 1500,
         views: 3800,
         ownerIndex: 1,
@@ -149,7 +149,7 @@ const seedData = async () => {
       {
         title: "Git and GitHub Mastery",
         description: "Master version control with Git and GitHub. Learn branching, merging, pull requests, and collaboration workflows. Essential for every developer.",
-        thumbnail: "https://via.placeholder.com/1280x720/9370DB/FFFFFF?text=Git+Tutorial",
+        thumbnail: "https://picsum.photos/seed/git/1280/720",
         duration: 900,
         views: 2900,
         ownerIndex: 2,
@@ -160,7 +160,7 @@ const seedData = async () => {
       {
         title: "TypeScript Fundamentals",
         description: "Learn TypeScript from scratch. Understand types, interfaces, generics, and how to use TypeScript with React and Node.js. Level up your JavaScript skills.",
-        thumbnail: "https://via.placeholder.com/1280x720/4169E1/FFFFFF?text=TypeScript+Tutorial",
+        thumbnail: "https://picsum.photos/seed/ts/1280/720",
         duration: 1100,
         views: 2200,
         ownerIndex: 0,
@@ -171,7 +171,7 @@ const seedData = async () => {
       {
         title: "REST API Design Best Practices",
         description: "Learn how to design and build RESTful APIs. Understand HTTP methods, status codes, authentication, and API documentation. Build production-ready APIs.",
-        thumbnail: "https://via.placeholder.com/1280x720/32CD32/FFFFFF?text=API+Tutorial",
+        thumbnail: "https://picsum.photos/seed/api/1280/720",
         duration: 1350,
         views: 3400,
         ownerIndex: 1,
@@ -182,7 +182,7 @@ const seedData = async () => {
       {
         title: "Webpack and Build Tools",
         description: "Understand modern build tools like Webpack, Vite, and Parcel. Learn bundling, code splitting, and optimization techniques for production applications.",
-        thumbnail: "https://via.placeholder.com/1280x720/FF6347/FFFFFF?text=Build+Tools",
+        thumbnail: "https://picsum.photos/seed/webpack/1280/720",
         duration: 1000,
         views: 1900,
         ownerIndex: 2,
@@ -193,7 +193,7 @@ const seedData = async () => {
       {
         title: "GraphQL API Development",
         description: "Introduction to GraphQL. Learn queries, mutations, subscriptions, and how to build GraphQL APIs with Node.js. Modern alternative to REST.",
-        thumbnail: "https://via.placeholder.com/1280x720/E91E63/FFFFFF?text=GraphQL+Tutorial",
+        thumbnail: "https://picsum.photos/seed/graphql/1280/720",
         duration: 1200,
         views: 2600,
         ownerIndex: 0,
@@ -204,7 +204,7 @@ const seedData = async () => {
       {
         title: "React Hooks Deep Dive",
         description: "Master React Hooks including useState, useEffect, useContext, and custom hooks. Learn best practices and common patterns for modern React development.",
-        thumbnail: "https://via.placeholder.com/1280x720/9C27B0/FFFFFF?text=React+Hooks",
+        thumbnail: "https://picsum.photos/seed/hooks/1280/720",
         duration: 800,
         views: 3100,
         ownerIndex: 1,
@@ -215,7 +215,7 @@ const seedData = async () => {
       {
         title: "Express.js Middleware Guide",
         description: "Deep dive into Express.js middleware. Learn to create custom middleware, error handling, authentication, and request processing. Build robust backends.",
-        thumbnail: "https://via.placeholder.com/1280x720/FF9800/FFFFFF?text=Express+Tutorial",
+        thumbnail: "https://picsum.photos/seed/express/1280/720",
         duration: 950,
         views: 2800,
         ownerIndex: 2,
@@ -226,7 +226,7 @@ const seedData = async () => {
       {
         title: "Database Design Principles",
         description: "Learn database design fundamentals. Understand normalization, relationships, indexing, and query optimization. Design efficient database schemas.",
-        thumbnail: "https://via.placeholder.com/1280x720/607D8B/FFFFFF?text=Database+Design",
+        thumbnail: "https://picsum.photos/seed/db/1280/720",
         duration: 1400,
         views: 3600,
         ownerIndex: 0,
@@ -237,7 +237,7 @@ const seedData = async () => {
       {
         title: "Authentication and Security",
         description: "Implement secure authentication systems. Learn JWT tokens, password hashing, OAuth, and security best practices. Protect your applications.",
-        thumbnail: "https://via.placeholder.com/1280x720/F44336/FFFFFF?text=Security+Tutorial",
+        thumbnail: "https://picsum.photos/seed/security/1280/720",
         duration: 1100,
         views: 4100,
         ownerIndex: 1,
@@ -248,7 +248,7 @@ const seedData = async () => {
       {
         title: "Testing with Jest and React",
         description: "Learn testing fundamentals with Jest and React Testing Library. Write unit tests, integration tests, and test React components. Ensure code quality.",
-        thumbnail: "https://via.placeholder.com/1280x720/4CAF50/FFFFFF?text=Testing+Tutorial",
+        thumbnail: "https://picsum.photos/seed/testing/1280/720",
         duration: 850,
         views: 2400,
         ownerIndex: 2,
@@ -259,7 +259,7 @@ const seedData = async () => {
       {
         title: "Deployment Strategies",
         description: "Learn how to deploy applications to production. Understand CI/CD, cloud platforms, Docker deployment, and monitoring. Ship your projects.",
-        thumbnail: "https://via.placeholder.com/1280x720/2196F3/FFFFFF?text=Deployment+Guide",
+        thumbnail: "https://picsum.photos/seed/deploy/1280/720",
         duration: 1300,
         views: 3900,
         ownerIndex: 0,
@@ -270,7 +270,7 @@ const seedData = async () => {
       {
         title: "Microservices Architecture",
         description: "Introduction to microservices architecture. Learn service decomposition, API gateways, service communication, and distributed systems design.",
-        thumbnail: "https://via.placeholder.com/1280x720/FF5722/FFFFFF?text=Microservices",
+        thumbnail: "https://picsum.photos/seed/micro/1280/720",
         duration: 1600,
         views: 2700,
         ownerIndex: 1,
@@ -281,7 +281,7 @@ const seedData = async () => {
       {
         title: "WebSocket Real-time Communication",
         description: "Build real-time applications with WebSockets. Learn Socket.io, real-time chat, live updates, and bidirectional communication. Create interactive apps.",
-        thumbnail: "https://via.placeholder.com/1280x720/795548/FFFFFF?text=WebSocket+Tutorial",
+        thumbnail: "https://picsum.photos/seed/socket/1280/720",
         duration: 720,
         views: 2000,
         ownerIndex: 2,
@@ -292,7 +292,7 @@ const seedData = async () => {
       {
         title: "Transformer Models Explained",
         description: "Understand the Transformer architecture behind modern NLP models. We cover attention, positional encoding, and scaling laws.",
-        thumbnail: "https://via.placeholder.com/1280x720/673AB7/FFFFFF?text=Transformers",
+        thumbnail: "https://picsum.photos/seed/transformer/1280/720",
         duration: 1250,
         views: 5200,
         ownerIndex: 0,
@@ -303,7 +303,7 @@ const seedData = async () => {
       {
         title: "NLP with Hugging Face Transformers",
         description: "Fine-tune Hugging Face transformer models for text classification, summarization, and question answering in production.",
-        thumbnail: "https://via.placeholder.com/1280x720/3F51B5/FFFFFF?text=HuggingFace",
+        thumbnail: "https://picsum.photos/seed/nlp/1280/720",
         duration: 1600,
         views: 4800,
         ownerIndex: 1,
@@ -314,7 +314,7 @@ const seedData = async () => {
       {
         title: "Vector Databases 101",
         description: "Learn vector database fundamentals, similarity search, and how to store embeddings for semantic search and recommendations.",
-        thumbnail: "https://via.placeholder.com/1280x720/009688/FFFFFF?text=Vector+DB",
+        thumbnail: "https://picsum.photos/seed/vector/1280/720",
         duration: 980,
         views: 3100,
         ownerIndex: 2,
@@ -325,7 +325,7 @@ const seedData = async () => {
       {
         title: "Building Recommendation Systems",
         description: "From collaborative filtering to deep learning recommenders. Build personalized feeds using implicit feedback and embeddings.",
-        thumbnail: "https://via.placeholder.com/1280x720/8BC34A/FFFFFF?text=Recommenders",
+        thumbnail: "https://picsum.photos/seed/rec/1280/720",
         duration: 1500,
         views: 3700,
         ownerIndex: 0,
@@ -336,7 +336,7 @@ const seedData = async () => {
       {
         title: "Elasticsearch for Developers",
         description: "Hands-on guide to Elasticsearch covering indexing, querying, aggregations, and vector search with hybrid ranking strategies.",
-        thumbnail: "https://via.placeholder.com/1280x720/FFB300/FFFFFF?text=Elasticsearch",
+        thumbnail: "https://picsum.photos/seed/elastic/1280/720",
         duration: 1300,
         views: 3300,
         ownerIndex: 1,
@@ -347,7 +347,7 @@ const seedData = async () => {
       {
         title: "Productionizing LLM Applications",
         description: "Best practices for building LLM-powered apps including prompt engineering, evaluation, caching, and safety guardrails.",
-        thumbnail: "https://via.placeholder.com/1280x720/607D8B/FFFFFF?text=LLM+Apps",
+        thumbnail: "https://picsum.photos/seed/llm/1280/720",
         duration: 1700,
         views: 4200,
         ownerIndex: 2,
@@ -358,7 +358,7 @@ const seedData = async () => {
       {
         title: "Building a YouTube Search Clone",
         description: "Implement a YouTube-style search experience using Elasticsearch, embeddings, and reranking strategies for high relevance.",
-        thumbnail: "https://via.placeholder.com/1280x720/EF6C00/FFFFFF?text=Search+Clone",
+        thumbnail: "https://picsum.photos/seed/search/1280/720",
         duration: 1450,
         views: 3900,
         ownerIndex: 0,
@@ -369,7 +369,7 @@ const seedData = async () => {
       {
         title: "Session-Based Recommendations",
         description: "Use Transformers for session-based recommendation with SASRec and next-event prediction on streaming data.",
-        thumbnail: "https://via.placeholder.com/1280x720/1E88E5/FFFFFF?text=SASRec",
+        thumbnail: "https://picsum.photos/seed/sasrec/1280/720",
         duration: 1250,
         views: 2800,
         ownerIndex: 1,
@@ -450,7 +450,7 @@ const seedData = async () => {
     console.log("   2. Start frontend: cd FRONTEND-2 && npm run dev");
     console.log("   3. Login with: demo_user1 / password123");
     console.log("   4. You should see all videos on the home page!");
-    
+
     process.exit(0);
   } catch (error) {
     console.error("❌ Error seeding data:", error);

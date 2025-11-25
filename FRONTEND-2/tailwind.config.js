@@ -8,35 +8,79 @@ export default {
   theme: {
     extend: {
       colors: {
-        // VidFlow Brand Colors
-        'brand-blue': '#2563eb',
-        'brand-cyan': '#06b6d4',
-        'brand-blue-dark': '#1d4ed8',
-        'brand-cyan-dark': '#0891b2',
+        // Ant Design Color System - Professional Blue Theme
+        'primary': {
+          50: '#e6f7ff',
+          100: '#bae7ff',
+          200: '#91d5ff',
+          300: '#69c0ff',
+          400: '#40a9ff',
+          500: '#1890ff',  // Ant Design Primary Blue
+          600: '#096dd9',
+          700: '#0050b3',
+          800: '#003a8c',
+          900: '#002766',
+        },
 
-        // Semantic colors
-        'success': '#10b981',
-        'warning': '#f59e0b',
-        'error': '#ef4444',
-        'info': '#3b82f6',
+        // Neutral/Gray Scale (Ant Design)
+        'neutral': {
+          50: '#fafafa',
+          100: '#f5f5f5',
+          200: '#e8e8e8',
+          300: '#d9d9d9',
+          400: '#bfbfbf',
+          500: '#8c8c8c',
+          600: '#595959',
+          700: '#434343',
+          800: '#262626',
+          900: '#1f1f1f',
+        },
+
+        // Semantic Colors (Ant Design)
+        'success': '#52c41a',
+        'warning': '#faad14',
+        'error': '#ff4d4f',
+        'info': '#1890ff',
+
+        // Surface & Background
+        'surface': {
+          DEFAULT: '#ffffff',
+          dark: '#141414',
+          card: '#fafafa',
+          hover: '#f5f5f5',
+        },
       },
       backgroundImage: {
-        'brand-gradient': 'linear-gradient(to right, #2563eb, #06b6d4)',
-        'brand-gradient-vertical': 'linear-gradient(to bottom, #2563eb, #06b6d4)',
+        'primary-gradient': 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
       },
       spacing: {
-        'navbar': '3.5rem',      /* 56px */
-        'sidebar': '16rem',      /* 256px */
-        'sidebar-collapsed': '5rem', /* 80px */
+        'navbar': '64px',
+        'sidebar': '256px',
       },
       borderRadius: {
-        'vidflow': '0.75rem',   /* 12px - VidFlow standard */
+        'ant': '2px',      // Ant Design default
+        'ant-lg': '4px',   // Large
+        'ant-xl': '8px',   // Extra large
       },
       boxShadow: {
-        'vidflow-sm': '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-        'vidflow-md': '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-        'vidflow-lg': '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-        'vidflow-xl': '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+        'ant-sm': '0 2px 8px rgba(0, 0, 0, 0.15)',
+        'ant-md': '0 4px 12px rgba(0, 0, 0, 0.15)',
+        'ant-lg': '0 8px 16px rgba(0, 0, 0, 0.15)',
+        'ant-xl': '0 12px 24px rgba(0, 0, 0, 0.15)',
+      },
+      animation: {
+        'ant-fade': 'fadeIn 0.3s ease-in-out',
+        'ant-slide': 'slideIn 0.3s ease-in-out',
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideIn: {
+          '0%': { transform: 'translateY(-10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
       },
     },
   },

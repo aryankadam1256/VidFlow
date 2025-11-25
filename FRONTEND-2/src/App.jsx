@@ -5,11 +5,13 @@ import AppLayout from './components/layout/AppLayout';
 import Home from './pages/Home';
 import VideoDetail from './pages/VideoDetail';
 import Upload from './pages/Upload';
+import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Search from './pages/Search';
 import Channel from './pages/Channel';
+import Trending from './pages/Trending';
 import './index.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -65,11 +67,25 @@ function App() {
             </AppLayout>
           } />
 
+          <Route path="/trending" element={
+            <AppLayout>
+              <Trending />
+            </AppLayout>
+          } />
+
           {/* Protected Routes */}
           <Route path="/upload" element={
             <ProtectedRoute>
               <AppLayout>
                 <Upload />
+              </AppLayout>
+            </ProtectedRoute>
+          } />
+
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Dashboard />
               </AppLayout>
             </ProtectedRoute>
           } />

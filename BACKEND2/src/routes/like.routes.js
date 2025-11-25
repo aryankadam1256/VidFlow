@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getLikedVideos, toggleCommentLike, toggleTweetLike, toggleVideoLike, getVideoLikeCount } from "../controllers/like.controller.js";
+import { getLikedVideos, toggleCommentLike, toggleTweetLike, toggleVideoLike, getVideoLikeCount, getCommentLikeCount } from "../controllers/like.controller.js";
 
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -14,5 +14,7 @@ router.route("/toggle-commentlike/:commentId").patch(verifyJWT, toggleCommentLik
 router.route("/getlikedvideos").get(verifyJWT, getLikedVideos);
 
 router.route("/video-like-count/:videoId").get(verifyJWT, getVideoLikeCount);
+
+router.route("/comment-like-count/:commentId").get(verifyJWT, getCommentLikeCount);
 
 export default router;

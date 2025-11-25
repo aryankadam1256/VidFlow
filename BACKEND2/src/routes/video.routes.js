@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { 
+import {
     getAllVideos,
     publishAVideo,
     getVideoById,
     updateVideo,
     deleteVideo,
-    togglePublishStatus 
+    togglePublishStatus,
+    getTrendingVideos
 } from "../controllers/video.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js"; // Assuming you have this for file uploads
@@ -14,6 +15,9 @@ const router = Router();
 
 // Get all videos (public)
 router.route("/").get(getAllVideos);
+
+// Get trending videos (public)
+router.route("/trending").get(getTrendingVideos);
 
 // Publish a new video (upload video file)
 router.route("/publish").post(verifyJWT, upload.single("videoFile"), publishAVideo);

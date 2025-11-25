@@ -33,10 +33,10 @@ apiClient.interceptors.response.use(
         const refreshResponse = await axios.post(`${API_BASE_URL}/users/refresh-token`, {}, {
           withCredentials: true
         });
-        
+
         const newAccessToken = refreshResponse.data.data.accessToken;
         localStorage.setItem('accessToken', newAccessToken);
-        
+
         // Retry the original request
         error.config.headers.Authorization = `Bearer ${newAccessToken}`;
         return apiClient.request(error.config);
@@ -70,11 +70,11 @@ export const videoAPI = {
   updateVideo: (videoId, data) => apiClient.patch(`/videos/${videoId}`, data),
   deleteVideo: (videoId) => apiClient.delete(`/videos/${videoId}`),
   togglePublishStatus: (videoId) => apiClient.patch(`/videos/${videoId}/toggle-publish`),
+  getTrending: (timeRange) => apiClient.get('/videos/trending', { params: { timeRange } }),
 };
 
 // Comment API calls
 export const commentAPI = {
-//   getVideoComments: (videoId) => apiClient.get(`/comments/update-comment/${videoId}`),
   getVideoComments: (videoId) => apiClient.get(`/comments/${videoId}`),
   addComment: (videoId, comment) => apiClient.post(`/comments/add-comment/${videoId}`, { comment }),
   updateComment: (commentId, newcomment) => apiClient.patch(`/comments/update-comment/${commentId}`, { newcomment }),
@@ -87,6 +87,7 @@ export const likeAPI = {
   toggleCommentLike: (commentId) => apiClient.patch(`/likes/toggle-commentlike/${commentId}`),
   getLikedVideos: () => apiClient.get('/likes/getlikedvideos'),
   getVideoLikeCount: (videoId) => apiClient.get(`/likes/video-like-count/${videoId}`),
+  getCommentLikeCount: (commentId) => apiClient.get(`/likes/comment-like-count/${commentId}`),
 };
 
 // Dashboard API calls
