@@ -197,11 +197,11 @@ const updateVideo = asyncHandler(async (req, res) => {
                     ? Array.isArray(req.body[field])
                         ? req.body[field]
                         : String(req.body[field])
-                              .split(",")
-                              .map((t) => t.trim())
+                            .split(",")
+                            .map((t) => t.trim())
                     : field === "publishedAt"
-                    ? new Date(req.body[field])
-                    : req.body[field];
+                        ? new Date(req.body[field])
+                        : req.body[field];
         }
     }
 
@@ -290,11 +290,80 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
         );
 });
 
+const getTrendingVideos = asyncHandler(async (req, res) => {
+    const { timeRange = "now", limit = 20 } = req.query;
+    const limitNum = Math.min(parseInt(limit, 10), 50);
+
+    let dateFilter = {};
+    const now = new Date();
+
+    if (timeRange === "week") {
+        const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        dateFilter = { createdAt: { $gte: lastWeek } };
+    } else if (timeRange === "month") {
+        const lastMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        dateFilter = { createdAt: { $gte: lastMonth } };
+    } else {
+        // 'now' - last 48 hours for high velocity
+        const last48Hours = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+        dateFilter = { createdAt: { $gte: last48Hours } };
+    }
+
+    const videos = await Video.aggregate([
+        {
+            $match: {
+                isPublished: true,
+                ...dateFilter
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "ownerDetails"
+            }
+        },
+        { $unwind: "$ownerDetails" },
+        {
+            $addFields: {
+                // Calculate trending score:
+                // (Views * 1) + (Likes * 3) + (Comments * 5)
+                // We don't have likes/comments count directly on video model yet, 
+                // so we'll use views and recency for now, or join if needed.
+                // For this implementation, we'll rely heavily on views and recency.
+
+                // Simple score: views / hours_since_published
+                hoursSincePublished: {
+                    $divide: [
+                        { $subtract: [new Date(), "$createdAt"] },
+                        1000 * 60 * 60
+                    ]
+                }
+            }
+        },
+        {
+            $addFields: {
+                trendingScore: {
+                    $divide: ["$views", { $add: ["$hoursSincePublished", 1] }]
+                }
+            }
+        },
+        { $sort: { trendingScore: -1 } },
+        { $limit: limitNum }
+    ]);
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, videos, "Trending videos fetched successfully"));
+});
+
 export {
     getAllVideos,
     publishAVideo,
     getVideoById,
     updateVideo,
     deleteVideo,
-    togglePublishStatus
+    togglePublishStatus,
+    getTrendingVideos
 };

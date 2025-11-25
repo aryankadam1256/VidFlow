@@ -18,19 +18,19 @@ export const logWatchEvent = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Video not found");
   }
 
+  // Always increment views immediately
+  video.views += 1;
+  await video.save();
+  await indexVideo(video._id);
+
+  // Always add to watch history
   await User.findByIdAndUpdate(req.user._id, {
     $addToSet: { watchHistory: video._id },
   });
 
-  if (progress >= 0.5) {
-    video.views += 1;
-    await video.save();
-    await indexVideo(video._id);
-  }
-
   return res
     .status(200)
-    .json(new ApiResponse(200, { videoId }, "Watch event logged"));
+    .json(new ApiResponse(200, { videoId, views: video.views }, "Watch event logged"));
 });
 
 export const logLikeEvent = asyncHandler(async (req, res) => {
@@ -48,4 +48,3 @@ export const logLikeEvent = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, { videoId }, "Like event logged"));
 });
-

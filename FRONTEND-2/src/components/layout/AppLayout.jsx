@@ -7,17 +7,17 @@ const AppLayout = ({ children }) => {
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
     return (
-        <div className="min-h-screen" style={{ backgroundColor: 'var(--bg-primary)' }}>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
             {/* Top Navbar */}
             <TopNavbar onAuthModalOpen={() => setIsAuthModalOpen(true)} />
 
             {/* Main Layout */}
-            <div className="flex">
+            <div className="flex pt-16">
                 {/* Sidebar */}
                 <AppSidebar />
 
                 {/* Main Content */}
-                <main className="flex-1 lg:ml-64 pt-6 pb-12 px-4 lg:px-8">
+                <main className="flex-1 lg:ml-64 p-6 animate-fade-in">
                     <div className="max-w-[1800px] mx-auto">
                         {children}
                     </div>

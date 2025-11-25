@@ -33,45 +33,44 @@ const VideoCard = ({ video, variant = 'vertical' }) => {
     return (
       <Link
         to={`/video/${video._id}`}
-        className="group flex gap-3 transition-all hover:bg-neutral-50 rounded-ant-lg p-2 border border-transparent hover:border-neutral-200"
+        className="group flex gap-4 p-2 rounded-xl transition-all hover:bg-slate-100 dark:hover:bg-slate-800 card-hover animate-fade-in"
       >
-        {/* Thumbnail Container - Ant Design Style */}
-        <div className="relative w-[360px] flex-shrink-0 aspect-video overflow-hidden rounded-ant bg-neutral-100">
+        {/* Thumbnail Container */}
+        <div className="relative w-[360px] flex-shrink-0 aspect-video overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-700">
           <img
             src={video.thumbnail}
             alt={video.title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          {/* Duration Badge - Ant Design */}
-          <span className="absolute bottom-1 right-1 rounded-ant bg-black/75 px-1.5 py-0.5 text-xs font-medium text-white">
+          <span className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
             {formatDuration(video.duration)}
           </span>
         </div>
 
         {/* Video Info */}
         <div className="flex-1 min-w-0 py-1">
-          <h3 className="mb-2 text-base font-semibold text-neutral-900 line-clamp-2 group-hover:text-primary-600 transition-colors">
+          <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white line-clamp-2 group-hover:text-brand-blue transition-colors">
             {video.title}
           </h3>
 
-          <div className="flex items-center gap-1.5 text-xs text-neutral-500 mb-2">
+          <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 mb-3">
             <span>{formatViews(video.views)}</span>
             <span>•</span>
             <span>{formatDate(video.createdAt)}</span>
           </div>
 
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-3">
             <img
               src={video.ownerDetails?.avatar || '/default-avatar.png'}
               alt={video.ownerDetails?.username}
-              className="h-6 w-6 rounded-full object-cover"
+              className="h-6 w-6 rounded-full object-cover border border-slate-200 dark:border-slate-700"
             />
-            <p className="text-xs text-neutral-600 hover:text-primary-600 transition-colors font-medium">
+            <p className="text-sm text-slate-600 dark:text-slate-300 hover:text-brand-blue transition-colors font-medium">
               {video.ownerDetails?.username}
             </p>
           </div>
 
-          <p className="text-sm text-neutral-600 line-clamp-2">
+          <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
             {video.description}
           </p>
         </div>
@@ -82,45 +81,44 @@ const VideoCard = ({ video, variant = 'vertical' }) => {
   return (
     <Link
       to={`/video/${video._id}`}
-      className="group block transition-all hover:shadow-ant-md rounded-ant-lg overflow-hidden"
+      className="group block rounded-xl overflow-hidden card-hover animate-fade-in"
     >
       {/* Thumbnail Container */}
-      <div className="relative aspect-video overflow-hidden bg-neutral-100">
+      <div className="relative aspect-video overflow-hidden rounded-xl bg-slate-200 dark:bg-slate-700 mb-3">
         <img
           src={video.thumbnail}
           alt={video.title}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
-        {/* Duration Badge - Ant Design */}
-        <span className="absolute bottom-1 right-1 rounded-ant bg-black/75 px-1.5 py-0.5 text-xs font-medium text-white">
+        <span className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs font-medium text-white backdrop-blur-sm">
           {formatDuration(video.duration)}
         </span>
       </div>
 
       {/* Video Info */}
-      <div className="mt-3 flex gap-3">
+      <div className="flex gap-3 px-1">
         {/* Channel Avatar */}
         <img
           src={video.ownerDetails?.avatar || '/default-avatar.png'}
           alt={video.ownerDetails?.username}
-          className="h-9 w-9 flex-shrink-0 rounded-full object-cover"
+          className="h-9 w-9 flex-shrink-0 rounded-full object-cover border border-slate-200 dark:border-slate-700"
         />
 
         {/* Video Details */}
         <div className="flex-1 min-w-0">
           {/* Title */}
-          <h3 className="mb-1 font-semibold text-sm text-neutral-900 line-clamp-2 group-hover:text-primary-600 transition-colors">
+          <h3 className="mb-1 font-semibold text-base text-slate-900 dark:text-white line-clamp-2 group-hover:text-brand-blue transition-colors">
             {video.title}
           </h3>
 
           {/* Channel Name */}
-          <p className="text-xs text-neutral-600 mb-0.5 hover:text-primary-600 transition-colors">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-1 hover:text-brand-blue transition-colors">
             {video.ownerDetails?.username}
           </p>
 
           {/* Views and Date */}
-          <div className="flex items-center gap-1.5 text-xs text-neutral-500">
+          <div className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-500">
             <span>{formatViews(video.views)}</span>
             <span>•</span>
             <span>{formatDate(video.createdAt)}</span>

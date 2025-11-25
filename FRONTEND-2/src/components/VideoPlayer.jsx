@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Play, Pause, Volume2, VolumeX, Maximize } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Mic, MicOff } from 'lucide-react';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 const VideoPlayer = ({ src, poster }) => {
     const videoRef = useRef(null);
@@ -8,6 +9,83 @@ const VideoPlayer = ({ src, poster }) => {
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
     const [currentTime, setCurrentTime] = useState(0);
+
+    // Voice Control State
+    const [voiceControlEnabled, setVoiceControlEnabled] = useState(false);
+    const [feedback, setFeedback] = useState('');
+
+    // Clear feedback after timer
+    useEffect(() => {
+        if (feedback) {
+            const timer = setTimeout(() => setFeedback(''), 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [feedback]);
+
+    const commands = [
+        {
+            command: ['play', 'start', 'resume', 'play video'],
+            callback: () => {
+                if (videoRef.current) {
+                    videoRef.current.play();
+                    setIsPlaying(true);
+                    setFeedback('▶ Playing');
+                }
+            },
+            isFuzzyMatch: true,
+            fuzzyMatchingThreshold: 0.2
+        },
+        {
+            command: ['pause', 'stop', 'wait', 'pause video'],
+            callback: () => {
+                if (videoRef.current) {
+                    videoRef.current.pause();
+                    setIsPlaying(false);
+                    setFeedback('⏸ Paused');
+                }
+            },
+            isFuzzyMatch: true,
+            fuzzyMatchingThreshold: 0.2
+        },
+        {
+            command: ['mute', 'silence', 'quiet', 'mute video'],
+            callback: () => {
+                if (videoRef.current) {
+                    videoRef.current.muted = true;
+                    setIsMuted(true);
+                    setFeedback('🔇 Muted');
+                }
+            },
+            isFuzzyMatch: true,
+            fuzzyMatchingThreshold: 0.2
+        },
+        {
+            command: ['unmute', 'speak', 'sound on', 'unmute video'],
+            callback: () => {
+                if (videoRef.current) {
+                    videoRef.current.muted = false;
+                    setIsMuted(false);
+                    setFeedback('🔊 Unmuted');
+                }
+            },
+            isFuzzyMatch: true,
+            fuzzyMatchingThreshold: 0.2
+        }
+    ];
+
+    const { browserSupportsSpeechRecognition } = useSpeechRecognition({ commands });
+
+    // Handle Voice Control Toggle
+    useEffect(() => {
+        if (voiceControlEnabled) {
+            SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+        } else {
+            SpeechRecognition.stopListening();
+        }
+        return () => {
+            SpeechRecognition.stopListening();
+        };
+    }, [voiceControlEnabled]);
 
     useEffect(() => {
         const video = videoRef.current;
@@ -55,6 +133,10 @@ const VideoPlayer = ({ src, poster }) => {
         }
     };
 
+    const toggleVoiceControl = () => {
+        setVoiceControlEnabled(!voiceControlEnabled);
+    };
+
     const handleFullscreen = () => {
         if (videoRef.current) {
             if (videoRef.current.requestFullscreen) {
@@ -87,6 +169,13 @@ const VideoPlayer = ({ src, poster }) => {
                 className="h-full w-full"
                 onClick={togglePlay}
             />
+
+            {/* Voice Command Feedback Overlay */}
+            {feedback && (
+                <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full backdrop-blur-sm animate-fade-in flex items-center gap-2">
+                    <span className="text-lg font-medium">{feedback}</span>
+                </div>
+            )}
 
             {/* Controls Overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
@@ -129,13 +218,29 @@ const VideoPlayer = ({ src, poster }) => {
                             </span>
                         </div>
 
-                        {/* Fullscreen */}
-                        <button
-                            onClick={handleFullscreen}
-                            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
-                        >
-                            <Maximize className="h-4 w-4" />
-                        </button>
+                        <div className="flex items-center gap-3">
+                            {/* Voice Control Toggle */}
+                            {browserSupportsSpeechRecognition && (
+                                <button
+                                    onClick={toggleVoiceControl}
+                                    className={`flex h-8 w-8 items-center justify-center rounded-full transition-colors ${voiceControlEnabled
+                                            ? 'bg-brand-gradient text-white shadow-lg animate-pulse'
+                                            : 'bg-white/20 text-white hover:bg-white/30'
+                                        }`}
+                                    title={voiceControlEnabled ? "Voice Control ON" : "Enable Voice Control"}
+                                >
+                                    {voiceControlEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                                </button>
+                            )}
+
+                            {/* Fullscreen */}
+                            <button
+                                onClick={handleFullscreen}
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-white hover:bg-white/30 transition-colors"
+                            >
+                                <Maximize className="h-4 w-4" />
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

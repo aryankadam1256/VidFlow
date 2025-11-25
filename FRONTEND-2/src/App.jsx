@@ -11,6 +11,7 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Search from './pages/Search';
 import Channel from './pages/Channel';
+import Trending from './pages/Trending';
 import './index.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -63,6 +64,12 @@ function App() {
           <Route path="/profile" element={
             <AppLayout>
               <Profile />
+            </AppLayout>
+          } />
+
+          <Route path="/trending" element={
+            <AppLayout>
+              <Trending />
             </AppLayout>
           } />
 
