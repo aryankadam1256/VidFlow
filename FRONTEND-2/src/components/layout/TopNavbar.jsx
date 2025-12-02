@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Upload, Bell, User, Mic, Sun, Moon } from 'lucide-react';
+import { Search, Upload, Bell, User, Mic, Sun, Moon, Menu } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import VidFlowLogo from '../VidFlowLogo';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
-const TopNavbar = ({ onAuthModalOpen }) => {
+const TopNavbar = ({ onAuthModalOpen, onSidebarToggle }) => {
     const { user, isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
     // Theme Toggle Logic
     useEffect(() => {
@@ -62,12 +62,20 @@ const TopNavbar = ({ onAuthModalOpen }) => {
     }
 
     return (
-        <nav className="sticky top-0 z-50 h-16 glass border-b border-white/20 dark:border-slate-800 transition-colors duration-300 animate-slide-down">
+        <nav className="sticky top-0 z-50 h-16 bg-white/90 backdrop-blur-md border-b border-slate-200 dark:bg-slate-900/80 dark:border-slate-800 transition-colors duration-300 animate-slide-down">
             <div className="flex h-full items-center justify-between px-4 lg:px-6">
-                {/* Left: Logo */}
-                <Link to="/" className="flex items-center gap-2 flex-shrink-0 hover:opacity-90 transition-opacity">
-                    <VidFlowLogo />
-                </Link>
+                {/* Left: Logo & Menu */}
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={onSidebarToggle}
+                        className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                    >
+                        <Menu className="h-6 w-6" />
+                    </button>
+                    <Link to="/" className="flex items-center gap-2 flex-shrink-0 hover:opacity-90 transition-opacity">
+                        <VidFlowLogo />
+                    </Link>
+                </div>
 
                 {/* Center: Search Bar */}
                 <form

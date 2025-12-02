@@ -49,9 +49,16 @@ export default {
           card: '#fafafa',
           hover: '#f5f5f5',
         },
+        'brand': {
+          blue: '#2563eb',
+          cyan: '#06b6d4',
+          'blue-dark': '#1d4ed8',
+          'cyan-dark': '#0891b2',
+        },
       },
       backgroundImage: {
         'primary-gradient': 'linear-gradient(135deg, #1890ff 0%, #096dd9 100%)',
+        'brand-gradient': 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)',
       },
       spacing: {
         'navbar': '64px',

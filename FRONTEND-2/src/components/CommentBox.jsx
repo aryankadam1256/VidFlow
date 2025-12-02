@@ -211,7 +211,7 @@ const CommentBox = ({ videoId }) => {
                         onClick={() => handleLikeComment(comment._id)}
                         disabled={!isAuthenticated}
                         className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${likeData.liked
-                          ? 'bg-blue-50 dark:bg-brand-blue/20 text-brand-blue'
+                          ? 'bg-blue-50 dark:bg-blue-900/30 text-brand-blue border border-brand-blue/20'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                           } ${!isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >

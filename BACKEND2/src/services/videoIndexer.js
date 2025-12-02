@@ -1,7 +1,7 @@
 import Video from "../models/video.model.js";
 import User from "../models/user.model.js";
-import { getEsClient } from "./esClient.js";
-import { generateEmbedding } from "./embeddings.js";
+import { index as pineconeIndex } from "./pineconeClient.js";
+import { generateEmbedding } from "./hfService.js";
 
 const VIDEO_INDEX = process.env.ELASTICSEARCH_VIDEO_INDEX || "videos";
 
@@ -38,76 +38,95 @@ const buildDocument = (videoDoc, owner) => {
 };
 
 export const indexVideo = async (videoId) => {
-  const es = getEsClient();
-  if (!es) return;
-
   const video = await Video.findById(videoId);
   if (!video) return;
 
   const owner = await User.findById(video.owner).select("username fullname avatar");
 
-  // Ensure embedding exists
+  // 1. Generate Embedding (if missing)
   if (!Array.isArray(video.embedding) || video.embedding.length === 0) {
-    const text = [video.title, video.description, (video.tags || []).join(" ")].join(
-      "\n"
-    );
-    const embedding = await generateEmbedding(text).catch(() => null);
+    const text = [video.title, video.description, (video.tags || []).join(" ")].join("\n");
+    const embedding = await generateEmbedding(text);
     if (embedding) {
       video.embedding = embedding;
       await video.save();
     }
   }
 
-  await es.index({
-    index: VIDEO_INDEX,
-    id: video._id.toString(),
-    document: buildDocument(video.toObject(), owner),
-    refresh: process.env.ELASTICSEARCH_REFRESH_IMMEDIATE === "true" ? "wait_for" : false,
-  });
+  // 2. Index to Pinecone (if embedding exists)
+  if (pineconeIndex && Array.isArray(video.embedding) && video.embedding.length > 0) {
+    try {
+      await pineconeIndex.upsert([{
+        id: video._id.toString(),
+        values: video.embedding,
+        metadata: {
+          title: video.title,
+          isPublished: video.isPublished,
+          ownerId: video.owner.toString(),
+          tags: (video.tags || []).join(","), // Pinecone metadata supports strings/numbers/booleans/arrays of strings
+          views: video.views
+        }
+      }]);
+      console.log(`🌲 Indexed video ${videoId} to Pinecone`);
+    } catch (err) {
+      console.error("❌ Pinecone Index Error:", err.message);
+    }
+  }
 };
 
 export const removeVideo = async (videoId) => {
-  const es = getEsClient();
-  if (!es) return;
-  await es.delete({
-    index: VIDEO_INDEX,
-    id: videoId.toString(),
-    ignore: [404],
-    refresh: process.env.ELASTICSEARCH_REFRESH_IMMEDIATE === "true" ? "wait_for" : false,
-  });
+  if (pineconeIndex) {
+    try {
+      await pineconeIndex.deleteOne(videoId.toString());
+      console.log(`🌲 Removed video ${videoId} from Pinecone`);
+    } catch (err) {
+      console.error("❌ Pinecone Delete Error:", err.message);
+    }
+  }
 };
 
 export const bulkIndexVideos = async (videoIds = []) => {
-  const es = getEsClient();
-  if (!es) return;
   const videos = await Video.find(
     videoIds.length ? { _id: { $in: videoIds } } : {}
-  ).limit(1000);
+  ).limit(100); // Pinecone batch limit is usually 100-200 vectors per request
 
-  const ownerMap = new Map();
-  await Promise.all(
-    videos.map(async (video) => {
-      if (!ownerMap.has(video.owner.toString())) {
-        const owner = await User.findById(video.owner).select(
-          "username fullname avatar"
-        );
-        ownerMap.set(video.owner.toString(), owner);
-      }
-    })
-  );
+  if (!videos.length) return;
 
-  const operations = [];
+  const vectors = [];
+
   for (const video of videos) {
-    const owner = ownerMap.get(video.owner.toString());
-    operations.push({ index: { _index: VIDEO_INDEX, _id: video._id.toString() } });
-    operations.push(buildDocument(video.toObject(), owner));
+    // Generate embedding if missing
+    if (!Array.isArray(video.embedding) || video.embedding.length === 0) {
+      const text = [video.title, video.description, (video.tags || []).join(" ")].join("\n");
+      const embedding = await generateEmbedding(text);
+      if (embedding) {
+        video.embedding = embedding;
+        await video.save();
+      }
+    }
+
+    if (Array.isArray(video.embedding) && video.embedding.length > 0) {
+      vectors.push({
+        id: video._id.toString(),
+        values: video.embedding,
+        metadata: {
+          title: video.title,
+          isPublished: video.isPublished,
+          ownerId: video.owner.toString(),
+          tags: (video.tags || []).join(","),
+          views: video.views
+        }
+      });
+    }
   }
 
-  if (operations.length === 0) return;
-
-  await es.bulk({
-    refresh: process.env.ELASTICSEARCH_REFRESH_IMMEDIATE === "true" ? "wait_for" : false,
-    operations,
-  });
+  if (vectors.length > 0 && pineconeIndex) {
+    try {
+      await pineconeIndex.upsert(vectors);
+      console.log(`🌲 Bulk indexed ${vectors.length} videos to Pinecone`);
+    } catch (err) {
+      console.error("❌ Pinecone Bulk Index Error:", err.message);
+    }
+  }
 };
 

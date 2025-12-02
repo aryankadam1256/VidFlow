@@ -4,8 +4,8 @@ import { Subscription } from "../models/subscription.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import { getEsClient } from "../services/esClient.js";
-import { generateEmbedding } from "../services/embeddings.js";
+import { index as pineconeIndex } from "../services/pineconeClient.js";
+import { generateEmbedding } from "../services/hfService.js";
 
 const VIDEO_INDEX = process.env.ELASTICSEARCH_VIDEO_INDEX || "videos";
 const DEFAULT_RRF_K = 60;
@@ -70,7 +70,7 @@ const formatEsHits = (hits) =>
  */
 const getSearchSuggestions = asyncHandler(async (req, res) => {
     const { q } = req.query;
-    
+
     if (!q || q.trim().length < 2) {
         return res.status(200).json(
             new ApiResponse(200, [], "Suggestions fetched successfully")
@@ -147,119 +147,67 @@ const searchVideos = asyncHandler(async (req, res) => {
         subscribedChannelIds = subscriptions.map(sub => sub.channel);
     }
 
-    const es = getEsClient();
-    if (es) {
-        const lexicalParams = {
-            index: VIDEO_INDEX,
-            from: (pageNum - 1) * limitNum,
-            size: limitNum,
-            track_total_hits: true,
-            query: {
-                bool: {
-                    must: [
+    // --- Pinecone Search ---
+    if (pineconeIndex) {
+        try {
+            // 1. Generate Query Embedding
+            const embedding = await generateEmbedding(query);
+
+            if (embedding) {
+                // 2. Query Pinecone
+                const searchResponse = await pineconeIndex.query({
+                    vector: embedding,
+                    topK: limitNum,
+                    includeMetadata: true,
+                    filter: { isPublished: true } // Only published videos
+                });
+
+                const matches = searchResponse.matches || [];
+                const matchedIds = matches.map(match => match.id);
+
+                // 3. Fetch Full Video Details from MongoDB (preserving order)
+                if (matchedIds.length > 0) {
+                    const videos = await Video.aggregate([
+                        { $match: { _id: { $in: matchedIds.map(id => new mongoose.Types.ObjectId(id)) } } },
                         {
-                            multi_match: {
-                                query,
-                                fields: [
-                                    "title^3",
-                                    "description",
-                                    "tags^2",
-                                    "transcript^0.5"
-                                ],
-                                type: "best_fields",
-                                operator: "or",
-                                fuzziness: "AUTO"
+                            $lookup: {
+                                from: "users",
+                                localField: "owner",
+                                foreignField: "_id",
+                                as: "ownerDetails"
                             }
-                        }
-                    ],
-                    filter: [{ term: { isPublished: true } }]
-                }
-            },
-            sort: sortBy === "date"
-                ? [{ publishedAt: "desc" }]
-                : sortBy === "views"
-                    ? [{ views: "desc" }, { publishedAt: "desc" }]
-                    : undefined
-        };
+                        },
+                        { $unwind: "$ownerDetails" },
+                        {
+                            $addFields: {
+                                __order: { $indexOfArray: [matchedIds.map(id => new mongoose.Types.ObjectId(id)), "$_id"] }
+                            }
+                        },
+                        { $sort: { __order: 1 } }
+                    ]);
 
-        // Build additional "should" clauses for boosts and recall
-        const shouldClauses = [];
-        // Boost subscribed channels
-        if (subscribedChannelIds.length > 0) {
-            shouldClauses.push({
-                terms: { ownerId: subscribedChannelIds.map((id) => id.toString()) }
-            });
-        }
-        // Prefix matches for better UX on partial queries (e.g., "jav" -> javascript)
-        shouldClauses.push({
-            multi_match: {
-                query,
-                type: "phrase_prefix",
-                fields: ["title^3", "tags^2", "description"]
+                    return res.status(200).json(
+                        new ApiResponse(
+                            200,
+                            videos,
+                            "Search results fetched successfully (Pinecone)",
+                            {
+                                query,
+                                page: pageNum,
+                                limit: limitNum,
+                                totalVideos: videos.length, // Approximate
+                                totalPages: 1,
+                                sortBy,
+                                engine: "pinecone"
+                            }
+                        )
+                    );
+                }
             }
-        });
-        // Synonym/alias expansion (js<->javascript, etc.)
-        const expanded = expandQuery(query);
-        if (expanded.length > 1) {
-            shouldClauses.push({
-                multi_match: {
-                    query: expanded.join(" "),
-                    fields: ["title^3", "tags^2", "description"],
-                    type: "best_fields",
-                    operator: "or"
-                }
-            });
+        } catch (error) {
+            console.error("❌ Pinecone Search Error:", error);
+            // Fallback to MongoDB if Pinecone fails
         }
-        if (shouldClauses.length > 0) {
-            lexicalParams.query.bool.should = shouldClauses;
-        }
-
-        const [lexicalResult, embedding] = await Promise.all([
-            es.search(lexicalParams),
-            generateEmbedding(query).catch(() => null)
-        ]);
-
-        let hits = lexicalResult.hits.hits;
-        let total = lexicalResult.hits.total?.value ?? hits.length;
-
-        if (embedding && Array.isArray(embedding)) {
-            const semanticResult = await es.knnSearch({
-                index: VIDEO_INDEX,
-                knn: {
-                    field: "embedding",
-                    query_vector: embedding,
-                    k: Math.max(limitNum, 20),
-                    num_candidates: Math.max(limitNum * 2, 50),
-                    filter: { term: { isPublished: true } }
-                }
-            });
-
-            hits = reciprocalRankFusion(
-                lexicalResult.hits.hits,
-                semanticResult.hits.hits
-            ).slice(0, limitNum);
-            total = Math.max(
-                lexicalResult.hits.total?.value ?? 0,
-                semanticResult.hits.total?.value ?? 0
-            );
-        }
-
-        return res.status(200).json(
-            new ApiResponse(
-                200,
-                formatEsHits(hits),
-                "Search results fetched successfully",
-                {
-                    query,
-                    page: pageNum,
-                    limit: limitNum,
-                    totalVideos: total,
-                    totalPages: Math.ceil(total / limitNum),
-                    sortBy,
-                    engine: "elasticsearch"
-                }
-            )
-        );
     }
 
     // --- MongoDB fallback ---
@@ -341,8 +289,8 @@ const searchVideos = asyncHandler(async (req, res) => {
                 sortBy === "date"
                     ? { createdAt: -1 }
                     : sortBy === "views"
-                    ? { views: -1, createdAt: -1 }
-                    : { relevanceScore: -1, createdAt: -1 }
+                        ? { views: -1, createdAt: -1 }
+                        : { relevanceScore: -1, createdAt: -1 }
         },
         { $skip: (pageNum - 1) * limitNum },
         { $limit: limitNum }
