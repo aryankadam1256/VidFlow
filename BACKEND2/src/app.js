@@ -1,14 +1,14 @@
 import express from "express";
 import cookieParser from "cookie-parser";
-const app= express();
- import cors from "cors";
+const app = express();
+import cors from "cors";
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true   
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(",") : "*",
+    credentials: true
 }));
 
-app.use(express.json({limit: "16kb"}));
-app.use(express.urlencoded({extended: true, limit: "16kb"}));
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 
 app.use(cookieParser());
@@ -30,27 +30,27 @@ import recommendationRouter from "./routes/recommendation.routes.js";
 import searchRouter from "./routes/search.routes.js";
 import eventsRouter from "./routes/events.routes.js";
 // routes declaration
-app.use("/api/v1/users",userRouter);
+app.use("/api/v1/users", userRouter);
 
-app.use("/api/v1/comments",commentRouter);
+app.use("/api/v1/comments", commentRouter);
 
-app.use("/api/v1/subscriptions",subscriptionRouter);
+app.use("/api/v1/subscriptions", subscriptionRouter);
 
-app.use("/api/v1/likes",likeRouter);
+app.use("/api/v1/likes", likeRouter);
 
-app.use("/api/v1/playlists",playlistRouter);
+app.use("/api/v1/playlists", playlistRouter);
 
-app.use("/api/v1/videos",videoRouter);
+app.use("/api/v1/videos", videoRouter);
 
-app.use("/api/v1/tweets",tweetRouter);
+app.use("/api/v1/tweets", tweetRouter);
 
-app.use("/api/v1/dashboards",dashboardRouter);
+app.use("/api/v1/dashboards", dashboardRouter);
 
-app.use("/api/v1/recommendations",recommendationRouter);
+app.use("/api/v1/recommendations", recommendationRouter);
 
-app.use("/api/v1/search",searchRouter);
+app.use("/api/v1/search", searchRouter);
 
-app.use("/api/v1/events",eventsRouter);
+app.use("/api/v1/events", eventsRouter);
 
 //http://localhost:8000/api/v1/users/register
 
@@ -58,4 +58,4 @@ app.use("/api/v1/events",eventsRouter);
 
 
 
-export {app};
+export { app };
