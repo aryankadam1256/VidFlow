@@ -5,17 +5,20 @@ import { app } from "./app.js";
 // import { DB_NAME } from "../constants";
 import connectDB from "./db/index.js";
 
-dotenv.config({ path: "./.env" });
+// Load .env only in development (Render uses Environment Variables)
+if (process.env.NODE_ENV !== 'production') {
+    dotenv.config({ path: "./.env" });
+}
 
 connectDB()
-.then(()=>{
-    app.listen(process.env.PORT || 8000,()=>{
-        console.log("server is running on port ",process.env.PORT || 8000);
-    });
-}
+    .then(() => {
+        app.listen(process.env.PORT || 8000, () => {
+            console.log("server is running on port ", process.env.PORT || 8000);
+        });
+    }
     )
-.catch((err)=>{
-    console.log("mongodb connection failed ",err);
-})
+    .catch((err) => {
+        console.log("mongodb connection failed ", err);
+    })
 
 
