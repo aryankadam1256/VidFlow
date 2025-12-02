@@ -12,6 +12,7 @@ import Profile from './pages/Profile';
 import Search from './pages/Search';
 import Channel from './pages/Channel';
 import Trending from './pages/Trending';
+import ParticlesBackground from './components/backgrounds/ParticlesBackground';
 import './index.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -35,6 +36,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        <ParticlesBackground />
         <Routes>
           {/* Public Routes - Wrapped in AppLayout */}
           <Route path="/" element={

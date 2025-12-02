@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  # 1. Database
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=videotube
+    networks:
+      - app_network
+
+  # 2. Search Engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - app_network
+
+  # 3. Backend API
+  backend:
+    build: ./BACKEND2
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/videotube
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - PORT=8000
+      - CORS_ORIGIN=http://localhost
+      # Add your other secrets here (CLOUDINARY, etc)
+      - ACCESS_TOKEN_SECRET=b3cc96a9d52d356d7af79b5a1180064d36c3d2215c3ba2068bbd14f0dd5c3205
+      - REFRESH_TOKEN_SECRET=0c6c12ca199dcdd2f4abce3e6812a84789cfd90c8e720a3533ed98e67c63dc98
+      - CLOUDINARY_CLOUD_NAME=dnvsbfl0p
+      - CLOUDINARY_API_KEY=125847891667347
+      - CLOUDINARY_API_SECRET=UMadfAF2g2-7vWYpuEDoD5-3L7c
+      - ELASTICSEARCH_VIDEO_INDEX=videos
+      - ELASTICSEARCH_TLS_SKIP_VERIFY=true
+      - HF_API_KEY=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
+    depends_on:
+      - mongodb
+      - elasticsearch
+    networks:
+      - app_network
+
+  # 4. Frontend App
+  frontend:
+    build: ./FRONTEND-2
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app_network
+
+volumes:
+  mongodb_data:
+  es_data:
+
+networks:
+  app_network:
+    driver: bridge

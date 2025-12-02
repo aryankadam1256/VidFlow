@@ -6,8 +6,8 @@ import { Subscription } from "../models/subscription.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 import asyncHandler from "../utils/asyncHandler.js";
-import { getEsClient } from "../services/esClient.js";
-import { generateEmbedding } from "../services/embeddings.js";
+import { index as pineconeIndex } from "../services/pineconeClient.js";
+import { generateEmbedding } from "../services/hfService.js";
 
 const VIDEO_INDEX = process.env.ELASTICSEARCH_VIDEO_INDEX || "videos";
 
@@ -35,7 +35,7 @@ const averageVectors = (vectors) => {
 const getRecommendedVideos = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const { page = 1, limit = 10 } = req.query;
-    
+
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
 
@@ -92,87 +92,57 @@ const getRecommendedVideos = asyncHandler(async (req, res) => {
         }
     }
 
-    if (es && userEmbedding) {
+    // --- Pinecone Recommendations ---
+    if (pineconeIndex && userEmbedding) {
         try {
-            const knnResult = await es.knnSearch({
-                index: VIDEO_INDEX,
-                knn: {
-                    field: "embedding",
-                    query_vector: userEmbedding,
-                    k: Math.max(limitNum * 2, 40),
-                    num_candidates: Math.max(limitNum * 3, 80),
-                    filter: {
-                        bool: {
-                            must: [{ term: { isPublished: true } }],
-                            must_not: [
-                                { terms: { _id: watchHistoryIds } },
-                                { terms: { _id: likedVideoIds } }
-                            ]
-                        }
-                    }
-                }
+            const searchResponse = await pineconeIndex.query({
+                vector: userEmbedding,
+                topK: Math.max(limitNum * 2, 20),
+                includeMetadata: true,
+                filter: { isPublished: true }
             });
 
-            recommendationHits = knnResult.hits.hits;
+            const matches = searchResponse.matches || [];
+            // Filter out watched/liked videos
+            recommendationHits = matches.filter(match =>
+                !watchHistoryIds.includes(match.id) &&
+                !likedVideoIds.includes(match.id)
+            ).map(match => ({
+                _id: match.id,
+                _source: match.metadata // Map metadata to _source to match previous structure if needed, or just handle IDs
+            }));
 
-            // Boost subscribed channels & tags via a secondary lexical query
-            if (subscribedChannelIds.length || topTags.length) {
-                const lexicalShould = [];
-                if (subscribedChannelIds.length) {
-                    lexicalShould.push({
-                        terms: {
-                            ownerId: subscribedChannelIds.map((id) => id.toString()),
-                            boost: 2
-                        }
-                    });
-                }
-                if (topTags.length) {
-                    lexicalShould.push({
-                        terms: {
-                            tags: topTags,
-                            boost: 1.5
-                        }
-                    });
-                }
-
-                if (lexicalShould.length) {
-                    const lexicalResult = await es.search({
-                        index: VIDEO_INDEX,
-                        size: Math.max(limitNum, 20),
-                        query: {
-                            bool: {
-                                filter: [{ term: { isPublished: true } }],
-                                should: lexicalShould,
-                                minimum_should_match: 1
-                            }
-                        }
-                    });
-
-                    // Simple fusion
-                    const ids = new Set();
-                    recommendationHits = recommendationHits.concat(lexicalResult.hits.hits);
-                    recommendationHits = recommendationHits.filter((hit) => {
-                        if (ids.has(hit._id)) return false;
-                        ids.add(hit._id);
-                        return true;
-                    });
-                }
-            }
         } catch (error) {
-            console.error("Recommendation ES error: ", error);
+            console.error("❌ Pinecone Recommendation Error:", error);
         }
     }
 
     let recommendedVideos = [];
     if (recommendationHits.length) {
-        recommendedVideos = recommendationHits
-            .map((hit) => ({
-                id: hit._id,
-                _id: hit._id,
-                ...hit._source
-            }))
-            .filter((video) => !watchHistoryIds.includes(video.id))
-            .slice((pageNum - 1) * limitNum, pageNum * limitNum);
+        const hitIds = recommendationHits.map(hit => new mongoose.Types.ObjectId(hit._id));
+
+        // Fetch full details from Mongo
+        recommendedVideos = await Video.aggregate([
+            { $match: { _id: { $in: hitIds } } },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "owner",
+                    foreignField: "_id",
+                    as: "ownerDetails"
+                }
+            },
+            { $unwind: "$ownerDetails" },
+            // Maintain order from Pinecone
+            {
+                $addFields: {
+                    __order: { $indexOfArray: [hitIds, "$_id"] }
+                }
+            },
+            { $sort: { __order: 1 } },
+            { $skip: (pageNum - 1) * limitNum },
+            { $limit: limitNum }
+        ]);
     } else {
         // MongoDB fallback: blend subscriptions, tags, and trending.
         const pipeline = [
@@ -254,9 +224,9 @@ const getRecommendedVideos = asyncHandler(async (req, res) => {
         recommendationHits.length > 0
             ? Math.max(recommendationHits.length, (pageNum - 1) * limitNum + recommendedVideos.length)
             : await Video.countDocuments({
-                  isPublished: true,
-                  _id: { $nin: watchHistoryObjectIds }
-              });
+                isPublished: true,
+                _id: { $nin: watchHistoryObjectIds }
+            });
 
     return res.status(200).json(
         new ApiResponse(
@@ -295,26 +265,20 @@ export const getRelatedVideos = asyncHandler(async (req, res) => {
     const es = getEsClient();
     let relatedHits = [];
 
-    if (es && Array.isArray(video.embedding) && video.embedding.length) {
+    if (pineconeIndex && Array.isArray(video.embedding) && video.embedding.length) {
         try {
-            const { hits } = await es.knnSearch({
-                index: VIDEO_INDEX,
-                knn: {
-                    field: "embedding",
-                    query_vector: video.embedding,
-                    k: 20,
-                    num_candidates: 50,
-                    filter: {
-                        bool: {
-                            must: [{ term: { isPublished: true } }],
-                            must_not: [{ term: { _id: videoId } }]
-                        }
-                    }
-                }
+            const searchResponse = await pineconeIndex.query({
+                vector: video.embedding,
+                topK: 20,
+                includeMetadata: true,
+                filter: { isPublished: true }
             });
-            relatedHits = hits.hits;
+
+            // Filter out the current video
+            relatedHits = (searchResponse.matches || []).filter(match => match.id !== videoId);
+
         } catch (error) {
-            console.error("Related videos ES error:", error);
+            console.error("❌ Pinecone Related Videos Error:", error);
         }
     }
 
@@ -335,11 +299,25 @@ export const getRelatedVideos = asyncHandler(async (req, res) => {
 
     let relatedVideos;
     if (relatedHits.length) {
-        relatedVideos = relatedHits.map((hit) => ({
-            id: hit._id,
-            _id: hit._id,
-            ...hit._source
-        }));
+        const hitIds = relatedHits.map(hit => new mongoose.Types.ObjectId(hit.id));
+        relatedVideos = await Video.aggregate([
+            { $match: { _id: { $in: hitIds } } },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "owner",
+                    foreignField: "_id",
+                    as: "ownerDetails"
+                }
+            },
+            { $unwind: "$ownerDetails" },
+            {
+                $addFields: {
+                    __order: { $indexOfArray: [hitIds, "$_id"] }
+                }
+            },
+            { $sort: { __order: 1 } }
+        ]);
     } else {
         relatedVideos = await Video.aggregate([
             {
@@ -377,39 +355,15 @@ export const getTagRecommendations = asyncHandler(async (req, res) => {
     const tagList = Array.isArray(tags)
         ? tags
         : String(tags)
-              .split(",")
-              .map((tag) => tag.trim())
-              .filter(Boolean);
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter(Boolean);
 
     const es = getEsClient();
-    if (es) {
-        try {
-            const { hits } = await es.search({
-                index: VIDEO_INDEX,
-                size: 20,
-                query: {
-                    bool: {
-                        filter: [{ term: { isPublished: true } }],
-                        should: [{ terms: { tags: tagList, boost: 2 } }],
-                        minimum_should_match: 1
-                    }
-                }
-            });
-
-            return res.status(200).json(
-                new ApiResponse(
-                    200,
-                    hits.hits.map((hit) => ({
-                        id: hit._id,
-                        _id: hit._id,
-                        ...hit._source
-                    })),
-                    "Tag recommendations fetched"
-                )
-            );
-        } catch (error) {
-            console.error("Tag recommendations ES error:", error);
-        }
+    if (pineconeIndex) {
+        // Pinecone doesn't support tag-based search easily without vectors. 
+        // We will skip Pinecone for simple tag recommendations and use MongoDB fallback.
+        // Or we could generate an embedding for the tags string, but let's keep it simple.
     }
 
     const videos = await Video.aggregate([

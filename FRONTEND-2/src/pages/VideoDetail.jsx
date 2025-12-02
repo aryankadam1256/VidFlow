@@ -28,7 +28,10 @@ const VideoDetail = () => {
     setVideo(null);
     setError(null);
     setRelated([]);
+
+    // Fetch data in parallel
     fetchVideo();
+    fetchRelated();
   }, [videoId]);
 
   // Refresh stats when user returns to the tab
@@ -80,7 +83,7 @@ const VideoDetail = () => {
           })
           .catch((err) => console.error('Error logging watch:', err));
       }
-      fetchRelated();
+      // fetchRelated is called in useEffect now
     } catch (error) {
       console.error('Error fetching video:', error);
       setError('Failed to load video');
