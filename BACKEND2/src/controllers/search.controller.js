@@ -198,8 +198,8 @@ const searchVideos = asyncHandler(async (req, res) => {
                                 limit: limitNum,
                                 totalVideos: videos.length, // Approximate
                                 totalPages: 1,
-                                sortBy,
-                                engine: "pinecone"
+                                engine: "pinecone",
+                                sortBy
                             }
                         )
                     );

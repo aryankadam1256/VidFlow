@@ -34,7 +34,7 @@ const averageVectors = (vectors) => {
  */
 const getRecommendedVideos = asyncHandler(async (req, res) => {
     const userId = req.user._id;
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 20 } = req.query;
 
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
@@ -148,8 +148,7 @@ const getRecommendedVideos = asyncHandler(async (req, res) => {
         const pipeline = [
             {
                 $match: {
-                    isPublished: true,
-                    _id: { $nin: watchHistoryObjectIds }
+                    isPublished: true
                 }
             },
             {
@@ -224,8 +223,7 @@ const getRecommendedVideos = asyncHandler(async (req, res) => {
         recommendationHits.length > 0
             ? Math.max(recommendationHits.length, (pageNum - 1) * limitNum + recommendedVideos.length)
             : await Video.countDocuments({
-                isPublished: true,
-                _id: { $nin: watchHistoryObjectIds }
+                isPublished: true
             });
 
     return res.status(200).json(
@@ -238,7 +236,7 @@ const getRecommendedVideos = asyncHandler(async (req, res) => {
                 limit: limitNum,
                 totalVideos: totalCount,
                 totalPages: Math.ceil(totalCount / limitNum),
-                engine: recommendationHits.length ? "elasticsearch" : "mongo-fallback"
+                engine: recommendationHits.length ? "pinecone" : "mongo-fallback"
             }
         )
     );
