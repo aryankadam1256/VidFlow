@@ -1,7 +1,14 @@
 // src/api/index.js
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/api/v1';
+let API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '/api/v1';
+
+// If it's a full URL (production) and doesn't have /api/v1, add it
+if (API_BASE_URL.startsWith('http') && !API_BASE_URL.endsWith('/api/v1')) {
+  // Remove trailing slash if present
+  API_BASE_URL = API_BASE_URL.replace(/\/$/, "");
+  API_BASE_URL = `${API_BASE_URL}/api/v1`;
+}
 
 // Create axios instance
 const apiClient = axios.create({
